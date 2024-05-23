@@ -6,7 +6,7 @@ from pptx.util import Inches
 image_dir = 'images'
 
 # List of images to be converted to ppt (ensure an even number of images)
-image_filenames = ['image1.jpg', 'image2.jpg', 'image3.png', 'image4.jpg']
+image_filenames = ['image1.jpg', 'image2.jpg', 'image3.jpg', 'image4.jpg']
 
 # Create a presentation object
 presentation = Presentation()
