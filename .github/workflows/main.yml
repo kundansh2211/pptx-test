@@ -33,7 +33,7 @@ jobs:
         run: |
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@github.com'
-          git add PPT/image_to_ppt.pptx  
+          git add PPT/image_ppt.pptx  
           git commit -m "Update PPT with new images"
           git push
         env:
