@@ -5,7 +5,7 @@ from pptx import Presentation
 image_dir = 'images'
 
 # List of images to be converted to ppt
-image_filenames = ['image1.jpg', 'image2.jpg', 'image3.jpg', 'image4.jpg']
+image_filenames = ['image.jpg', 'image2.jpg', 'image3.jpg', 'image4.jpg']
 
 # Create a presentation object
 presentation = Presentation()
