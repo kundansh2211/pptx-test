@@ -5,12 +5,10 @@ from pptx import Presentation
 image_dir = 'images'
 
 # List of images to be converted to ppt
-image_filenames = ['image.jpg', 'image2.jpg', 'image3.jpg', 'image4.jpg']
+image_filenames = ['image1.jpg', 'image2.jpg', 'image3.jpg', 'image4.jpg']
 
-# Create a presentation object
 presentation = Presentation()
 
-# Loop through the image filenames and add slides with images
 for filename in image_filenames:
     # Construct the full path to the image file
     image_path = os.path.join(image_dir, filename)
@@ -38,7 +36,7 @@ for filename in image_filenames:
 
         # Add the images to the slide
         slide.shapes.add_picture(image_path, left1, top, image_width, image_height)
-        # Assuming you have a second image for each slide for demonstration
+
         # This is just an example, modify as needed
         if image_filenames.index(filename) + 1 < len(image_filenames):
             image_path2 = os.path.join(image_dir, image_filenames[image_filenames.index(filename) + 1])
