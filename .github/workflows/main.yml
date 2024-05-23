@@ -27,7 +27,7 @@ jobs:
     - name: Run script to generate PPT
       run: |
         source venv/bin/activate
-        python image_ppt.py
+        python image_to_ppt.py
 
     - name: Commit and push updated PPT
       run: |
