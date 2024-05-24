@@ -1,41 +1,86 @@
-name: Update PPT on Image Commit
+name: Generate PPT on Commit
 
 on:
   push:
-    paths:
-      - 'images/**'  # Trigger workflow on changes in the images folder
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Fetch all commit history so that we can use git log
 
-    - name: Set up Python 3.12.3
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.12.3'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12.3"
 
-    - name: Install dependencies
-      run: |
-        python3 -m venv venv
-        source venv/bin/activate
-        pip3 install python-pptx
+      - name: Install dependencies
+        run: |
+          python3 -m venv venv
+          source venv/bin/activate
+          pip3 install python-pptx
 
-    - name: Run script to generate PPT
-      run: |
-        source venv/bin/activate
-        python image_to_ppt.py
+      - name: Run script
+        run: |
+          source venv/bin/activate
+          python image_to_ppt.py
 
-    - name: Commit and push updated PPT
-      run: |
-        git config --global user.name 'github-actions'
-        git config --global user.email 'github-actions@github.com'
-        git add PPT/image_ppt.pptx
-        git commit -m "Update PPT with new images"
-        git push https://github.com/${{ github.repository }}.git HEAD:main
-      env:
-        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      - name: Commit and push changes
+
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git add PPT/image_ppt.pptx
+          git commit -m "Update PPT with new images"
+          git push https://github.com/${{ github.repository }}.git HEAD:main
+
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+          
+# name: Update PPT on Image Commit
+# on:
+#   push:
+#     paths:
+#       - 'images/**'  # Trigger workflow on changes in the images folder
+
+# jobs:
+#   build:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#     - name: Checkout repository
+#       uses: actions/checkout@v3
+
+#     - name: Set up Python 3.12.3
+#       uses: actions/setup-python@v4
+#       with:
+#         python-version: '3.12.3'
+
+#     - name: Install dependencies
+#       run: |
+#         python3 -m venv venv
+#         source venv/bin/activate
+#         pip3 install python-pptx
+
+#     - name: Run script to generate PPT
+#       run: |
+#         source venv/bin/activate
+#         python image_to_ppt.py
+
+#     - name: Commit and push updated PPT
+#       run: |
+#         git config --global user.name 'github-actions'
+#         git config --global user.email 'github-actions@github.com'
+#         git add PPT/image_ppt.pptx
+#         git commit -m "Update PPT with new images"
+#         git push https://github.com/${{ github.repository }}.git HEAD:main
+#       env:
+#         GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
