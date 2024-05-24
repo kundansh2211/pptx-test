@@ -1,10 +1,7 @@
-name: Generate PPT on Commit
-
 on:
   push:
-    branches:
-      - main
-
+    paths:
+      - 'images/**'
 jobs:
   build:
     runs-on: ubuntu-latest
