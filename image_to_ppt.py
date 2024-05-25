@@ -1,88 +1,98 @@
-import subprocess
+import os
+from git import Repo
 from pptx import Presentation
-from pptx.util import Inches, Pt
+from pptx.util import Inches
 
-# Define the directory where images are stored
-image_dir = 'images'
+def get_images_from_last_n_commits(repo_path, n):
+    # Initialize the repository
+    repo = Repo(repo_path)
 
-def get_changed_files(n=3):
-    # Get the last n commit IDs
-    command = f"git log -n {n} --pretty=format:%H"
-    commit_ids = subprocess.check_output(command, shell=True).decode().split()
-    changed_files = set()
-    
-    for i in range(len(commit_ids) - 1):
-        commit_id = commit_ids[i]
-        prev_commit_id = commit_ids[i + 1]
-        
-        # Get the diff of files between each pair of commits
-        command = f"git diff --name-status {commit_id} {prev_commit_id}"
-        diff_output = subprocess.check_output(command, shell=True).decode().splitlines()
-        
-        for line in diff_output:
-            status, file_path = line.split(maxsplit=1)
-            if file_path.startswith(image_dir):
-                changed_files.add(file_path.strip())
-    
-    # Include changes from the latest commit
-    if len(commit_ids) > 0:
-        command = f"git diff --name-status {commit_ids[-1]}^!"
-        diff_output = subprocess.check_output(command, shell=True).decode().splitlines()
-        
-        for line in diff_output:
-            status, file_path = line.split(maxsplit=1)
-            if file_path.startswith(image_dir):
-                changed_files.add(file_path.strip())
-    
-    return list(changed_files)
+    # Get the list of the last n commits
+    commits = list(repo.iter_commits('main', max_count=n))  # Replace 'main' with the correct branch if necessary
 
-def create_ppt_with_images(image_paths, ppt_path='PPT/image_ppt.pptx'):
+    image_files = set()
+
+    # Loop through each commit
+    for commit in commits:
+        # Get the diff of the commit
+        for diff in commit.diff(None, create_patch=False):
+            # Check if the file is an image
+            if diff.a_path and diff.a_path.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
+                image_files.add(diff.a_path)
+            if diff.b_path and diff.b_path.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
+                image_files.add(diff.b_path)
+
+    return list(image_files)
+
+def create_presentation(image_list, output_path):
+    # Create a presentation object
     presentation = Presentation()
-    
-    for i in range(0, len(image_paths), 2):
-        # Create a slide with blank layout
-        slide_layout = presentation.slide_layouts[6]
-        slide = presentation.slides.add_slide(slide_layout)
 
-        # Define the dimensions for the images
-        slide_width = presentation.slide_width
-        slide_height = presentation.slide_height
-        image_width = (slide_width - Inches(1)) / 2  # Leave some space between images
-        image_height = slide_height - Inches(1)  # Leave some space at top and bottom
+    # Loop through the image filenames and add slides with images
+    for image_path in image_list:
+        # Check if the image file exists
+        if not os.path.isfile(image_path):
+            print(f"Image file not found, skipping: {image_path}")
+            continue
 
-        left1 = Inches(0.25)
-        top1 = Inches(0.5)
-        left2 = left1 + image_width + Inches(0.5)
-        
-        # Add the first image and label
-        if i < len(image_paths):
-            image_path1 = image_paths[i]
-            print(f"Adding image: {image_path1}")  # Debug print
-            slide.shapes.add_picture(image_path1, left1, top1, image_width, image_height)
-            
-            textbox = slide.shapes.add_textbox(left1, Inches(0.0), image_width, Inches(0.5))
-            text_frame = textbox.text_frame
-            p = text_frame.add_paragraph()
-            p.text = "Deleted"
-            p.font.size = Pt(18)
+        try:
+            # Create a slide with blank layout
+            slide_layout = presentation.slide_layouts[6]
+            slide = presentation.slides.add_slide(slide_layout)
 
-        # Add the second image and label if it exists
-        if i + 1 < len(image_paths):
-            image_path2 = image_paths[i + 1]
-            print(f"Adding image: {image_path2}")  # Debug print
-            slide.shapes.add_picture(image_path2, left2, top1, image_width, image_height)
-            
-            textbox = slide.shapes.add_textbox(left2, Inches(0.0), image_width, Inches(0.5))
-            text_frame = textbox.text_frame
-            p = text_frame.add_paragraph()
-            p.text = "Updated"
-            p.font.size = Pt(18)
-    
-    presentation.save(ppt_path)
+            # Add the image to the slide and adjust size and position
+            pic = slide.shapes.add_picture(image_path, 0, 0)
 
-# Get the list of changed image files
-changed_images = get_changed_files(n=3)
-print(f"Changed images: {changed_images}")  # Debug print
+            # Calculate the scaling factor to maintain the aspect ratio
+            slide_width = presentation.slide_width
+            slide_height = presentation.slide_height
+            scale_w = slide_width / pic.width
+            scale_h = slide_height / pic.height
+            scale = min(scale_w, scale_h)
 
-# Create a PPT with the changed images
-create_ppt_with_images(changed_images)
+            # Resize the image
+            new_width = int(pic.width * scale)
+            new_height = int(pic.height * scale)
+
+            # Center the image on the slide
+            pic.left = int((slide_width - new_width) / 2)
+            pic.top = int((slide_height - new_height) / 2)
+            pic.width = new_width
+            pic.height = new_height
+
+        except Exception as e:
+            print(f"Error adding image {image_path}: {e}")
+
+    # Save the presentation
+    presentation.save(output_path)
+    print(f"Presentation saved successfully to {output_path}")
+
+    # Cleanup temporary files
+    cleanup_temporary_files(os.path.dirname(output_path))
+
+def cleanup_temporary_files(directory):
+    for filename in os.listdir(directory):
+        if filename.startswith('~$'):
+            tmp_file_path = os.path.join(directory, filename)
+            try:
+                os.remove(tmp_file_path)
+                print(f"Removed temporary file: {tmp_file_path}")
+            except Exception as e:
+                print(f"Error removing temporary file {tmp_file_path}: {e}")
+
+# Example usage:
+repo_path = '.'  # Current directory, assuming the script is in the repo
+n = 5  # Number of commits to look back
+image_list = get_images_from_last_n_commits(repo_path, n)
+print("Images from last", n, "commits:", image_list)
+
+# Ensure the output directory exists
+output_dir = 'PPT'
+if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
+
+# Set the output path for the presentation
+output_path = os.path.join(output_dir, 'image_ppt.pptx')
+
+# Create the presentation
+create_presentation(image_list, output_path)
