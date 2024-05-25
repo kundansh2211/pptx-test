@@ -35,6 +35,11 @@ presentation = Presentation()
 
 # Loop through the image filenames and add slides with images
 for image_path in image_list:
+    # Check if the image file exists
+    if not os.path.isfile(image_path):
+        print(f"Image file not found, skipping: {image_path}")
+        continue
+
     try:
         # Create a slide with blank layout
         slide_layout = presentation.slide_layouts[6]
