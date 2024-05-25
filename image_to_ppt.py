@@ -1,4 +1,3 @@
-import os
 import subprocess
 from pptx import Presentation
 from pptx.util import Inches, Pt
