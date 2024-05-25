@@ -1,18 +1,18 @@
 import os
 from git import Repo
 from pptx import Presentation
-from pptx.util import Inches
+
 
 def get_images_from_last_n_commits(repo_path, n):
     # Initialize the repository
     repo = Repo(repo_path)
 
     # Get the list of the last n commits
-    commits = list(repo.iter_commits('main', max_count=n))  # Replace 'main' with the correct branch if necessary
+    # Replace 'main' with the correct branch if necessary
+    commits = list(repo.iter_commits('main', max_count=n))
 
     image_files = set()
 
-    # Loop through each commit
     for commit in commits:
         # Get the diff of the commit
         for diff in commit.diff(None, create_patch=False):
@@ -23,6 +23,7 @@ def get_images_from_last_n_commits(repo_path, n):
                 image_files.add(diff.b_path)
 
     return list(image_files)
+
 
 def create_presentation(image_list, output_path):
     # Create a presentation object
@@ -70,6 +71,7 @@ def create_presentation(image_list, output_path):
     # Cleanup temporary files
     cleanup_temporary_files(os.path.dirname(output_path))
 
+
 def cleanup_temporary_files(directory):
     for filename in os.listdir(directory):
         if filename.startswith('~$'):
@@ -79,6 +81,7 @@ def cleanup_temporary_files(directory):
                 print(f"Removed temporary file: {tmp_file_path}")
             except Exception as e:
                 print(f"Error removing temporary file {tmp_file_path}: {e}")
+
 
 # Example usage:
 repo_path = '.'  # Current directory, assuming the script is in the repo
